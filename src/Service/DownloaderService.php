@@ -3,10 +3,11 @@
 namespace App\Service;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\TransferStats;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\TransferStats;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\Filesystem\Filesystem;
 
 class DownloaderService
 {
@@ -24,17 +25,24 @@ class DownloaderService
      * @var Client $client
      */
     private $client;
+    /**
+     * @var \Symfony\Component\Filesystem\Filesystem
+     */
+    private $filesystem;
 
     /**
      * App constructor.
      *
-     * @param SymfonyStyle $io
-     * @param array        $configs
+     * @param SymfonyStyle                             $io
+     * @param \Symfony\Component\Filesystem\Filesystem $filesystem
+     * @param array                                    $configs
      */
-    public function __construct(SymfonyStyle $io, array $configs)
+    public function __construct(SymfonyStyle $io, Filesystem $filesystem, array $configs)
     {
         $this->io = $io;
         $this->configs = $configs;
+        $this->filesystem = $filesystem;
+
         $this->client = new Client([
             'base_uri' => $this->configs['URL'],
             'cookies' => true
@@ -49,13 +57,22 @@ class DownloaderService
         $this->login();
 
         $downloadPath = "{$this->configs['TARGET']}/symfonycasts";
-        if (!is_dir($downloadPath) && !mkdir($downloadPath) && !is_dir($downloadPath)) {
+        if( !$this->filesystem->exists( $downloadPath ) ) {
+            $this->filesystem->mkdir( $downloadPath, 0700 );
+        }
+
+        if (!$this->filesystem->exists($downloadPath))
+        {
             $this->io->error("Unable to create download directory '{$downloadPath}'");
 
             return;
         }
 
         $courses = $this->fetchCourses();
+
+        $this->io->note('Fertig..');
+
+        return;
 
         $coursesCounter = 0;
         $coursesCount = \count($courses);

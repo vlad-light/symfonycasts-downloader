@@ -7,6 +7,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Filesystem;
 
 class DownloaderCommand extends Command
 {
@@ -20,7 +21,8 @@ class DownloaderCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io         = new SymfonyStyle($input, $output);
+        $fileSystem = new Filesystem();
 
         if (!file_exists(__DIR__ . '/../local.ini')) {
             $io->error("Hint: Copy run 'cp application.init local.ini' and provide required credentials");
@@ -34,7 +36,7 @@ class DownloaderCommand extends Command
             return;
         }
 
-        $downloader = new DownloaderService($io, $configs);
+        $downloader = new DownloaderService($io, $fileSystem, $configs);
         $downloader->download();
     }
 }

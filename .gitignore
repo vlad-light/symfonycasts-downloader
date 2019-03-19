@@ -3,3 +3,5 @@ vendor
 .idea
 blueprint.json
 src/local.ini
+*.phar
+*.code-workspace
